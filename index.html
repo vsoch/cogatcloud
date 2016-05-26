@@ -108,7 +108,7 @@ body {
 
 </style>
 <body>
-<h3 style="padding-left:15px">Cognitive Concept Association with Region Frontal_Sup_2_R</h3>
+<h3 style="padding-left:15px">Cognitive Concept Association with Region Cingulate_Ant_R</h3>
 
 <div id="voxel" class="visual"></div>
 
@@ -457,7 +457,7 @@ body {
 </div>
 
 <script>
-var regparams = [{"value":-0.0121281705,"key":"memory","color":"#B563C7"},{"value":-0.0121145494,"key":"recognition","color":"#277A55"},{"value":0.0066363897,"key":"visual pattern recognition","color":"#FA1194"},{"value":-0.0479517956,"key":"word recognition","color":"#D39EE2"},{"value":-0.0479539345,"key":"visual word recognition","color":"#79F720"},{"value":-0.0839399718,"key":"selective control","color":"#09CD6E"},{"value":-0.0489853057,"key":"visual recognition","color":"#073AFE"},{"value":-0.3252848898,"key":"reward anticipation","color":"#B18B92"},{"value":0.0066433924,"key":"pattern recognition","color":"#8A7447"},{"value":0.2119356176,"key":"animacy perception","color":"#5E10FE"},{"value":0.2066111476,"key":"causal inference","color":"#235041"},{"value":0.2066103599,"key":"inference","color":"#4F8778"},{"value":-0.1314063832,"key":"categorization","color":"#2A12F8"},{"value":0.1427702655,"key":"feature comparison","color":"#11B3A7"},{"value":-0.0657871524,"key":"object recognition","color":"#427D28"},{"value":0.0226209931,"key":"updating","color":"#0B0F48"},{"value":-0.1699952439,"key":"visual perception","color":"#0A1A65"}]  //regparam lookup by concept
+var regparams = [{"value":-0.3265025308,"key":"auditory recognition","color":"#05ECFA"},{"value":-0.3560277583,"key":"cognitive control","color":"#883D19"},{"value":-0.2964939426,"key":"visual form recognition","color":"#610C86"},{"value":0.1115139441,"key":"auditory tone discrimination","color":"#2A0486"},{"value":0.0741784884,"key":"visual pattern recognition","color":"#9141E1"},{"value":-0.7586455563,"key":"animacy decision","color":"#669948"},{"value":-0.0633596598,"key":"word recognition","color":"#EF93D5"},{"value":1.0645729502,"key":"perception","color":"#DB1EBB"},{"value":-0.0630550392,"key":"visual word recognition","color":"#3BFEFA"},{"value":0.1520211793,"key":"auditory perception","color":"#29CC5B"},{"value":-0.4646655143,"key":"form perception","color":"#D481A2"},{"value":1.2826918041,"key":"visual place recognition","color":"#A30B41"},{"value":-0.8578340461,"key":"context representation","color":"#F4A7A8"},{"value":-0.7532258334,"key":"body maintenance","color":"#539FF9"},{"value":-0.0160033545,"key":"reward anticipation","color":"#1EEA18"},{"value":-0.2452526558,"key":"visual attention","color":"#B12645"},{"value":-0.7532234637,"key":"visual body recognition","color":"#92E7BF"},{"value":0.0741820995,"key":"pattern recognition","color":"#9955A0"},{"value":-0.3173673771,"key":"working memory maintenance","color":"#10A72A"},{"value":0.591929076,"key":"error detection","color":"#A3C8B3"},{"value":-0.4472051051,"key":"visual object recognition","color":"#7EAD32"},{"value":-0.7586428385,"key":"motion detection","color":"#7B3839"},{"value":0.060270392,"key":"causal inference","color":"#B87324"},{"value":0.1184415771,"key":"oddball detection","color":"#92F42D"},{"value":0.0602705378,"key":"inference","color":"#4152AF"},{"value":0.0831109657,"key":"right hand response execution","color":"#93162F"},{"value":-0.0604966285,"key":"categorization","color":"#573752"},{"value":-0.8578342501,"key":"monetary reward prediction error","color":"#5F9E1E"},{"value":0.6068580427,"key":"feature comparison","color":"#E50736"},{"value":-0.1031159543,"key":"object detection","color":"#1CEC28"},{"value":-0.5235982961,"key":"object recognition","color":"#015A99"},{"value":-0.8578330886,"key":"mental representation","color":"#B7205F"},{"value":0.373347173,"key":"visual sentence recognition","color":"#03CC27"},{"value":-0.2452483205,"key":"attention","color":"#B409D6"},{"value":-0.4594356391,"key":"updating","color":"#9C65D7"},{"value":-0.2350137451,"key":"visual object detection","color":"#45285A"},{"value":-0.2452445255,"key":"spatial attention","color":"#6C81F3"},{"value":-0.4533708999,"key":"feedback processing","color":"#9BEFD8"},{"value":-0.0115951778,"key":"response execution","color":"#1C8EF7"},{"value":-0.0440651919,"key":"punishment processing","color":"#2F4925"},{"value":-0.7433960242,"key":"detection","color":"#23779B"}]  //regparam lookup by concept
 
 var width = 1500,
     height = 600,
@@ -466,11 +466,11 @@ var width = 1500,
 
 // Linear color scale between blue and red
 var color = d3.scale.linear()
-    .domain([-2.9264895916, 0,7.08137655258])
+    .domain([-12.1944122314, 0,9.8075428009])
     .range(["cornflowerblue","#CCCCCC","orangered"]);
 
 var x = d3.scale.linear()
-    .domain([-0.325284889763-0.2,0.211935617638+0.2])
+    .domain([-0.857834250104-0.2,1.28269180406+0.2])
     .range([0, width]);
 
 nodes = []
@@ -481,7 +481,19 @@ $.each(regparams, function( concept, value ) {
     nodes.push(node)
 });
 
+// Sort nodes by value
+nodes = nodes.sort(function(a,b) { return +a.value - +b.value; })
+
 var fill = d3.scale.category20b();
+
+// Color scales
+var neg_color = d3.scale.linear()
+    .domain([-1, 0])
+    .range(["blue", "#CCC"]);
+
+var pos_color = d3.scale.linear()
+    .domain([0, 1])
+    .range(["#CCC", "orangered"]);
 
 var max,
         fontSize;
@@ -490,7 +502,8 @@ var layout = d3.layout.cloud()
     .timeInterval(Infinity)
     .size([width, height])
     .fontSize(function(d) {
-        return fontSize(+d.value);
+        // Size should be absolute value
+        return fontSize(+Math.abs(d.value));
     })
     .text(function(d) {
         return d.key;
@@ -514,44 +527,54 @@ function draw(data, bounds) {
     svg.attr("width", width).attr("height", height);
 
     scale = bounds ? Math.min(
-            width / Math.abs(bounds[1].x - width / 2),
-            width / Math.abs(bounds[0].x - width / 2),
-            height / Math.abs(bounds[1].y - height / 2),
-            height / Math.abs(bounds[0].y - height / 2)) / 2 : 1;
+        width / Math.abs(bounds[1].x - width / 2),
+        width / Math.abs(bounds[0].x - width / 2),
+        height / Math.abs(bounds[1].y - height / 2),
+        height / Math.abs(bounds[0].y - height / 2)) / 2 : 1;
 
     var text = vis.selectAll("text")
-            .data(data, function(d) {
-                return d.text.toLowerCase();
-            });
+        .data(data, function(d) {
+            return d.text.toLowerCase();
+        });
+
     text.transition()
-            .duration(1000)
-            .attr("transform", function(d) {
-                return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
-            })
-            .style("font-size", function(d) {
-                return d.size + "px";
-            });
+        .duration(1000)
+        .attr("transform", function(d) {
+            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .style("font-size", function(d) {
+            return d.size + "px";
+        });
+
     text.enter().append("text")
-            .attr("text-anchor", "middle")
-            .attr("transform", function(d) {
-                return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
-            })
-            .style("font-size", function(d) {
-                return d.size + "px";
-            })
-            .style("opacity", 1e-6)
-            .transition()
+        .attr("text-anchor", "middle")
+        .attr("transform", function(d) {
+            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .style("font-size", function(d) {
+            return d.size + "px";
+        })
+        .style("opacity", 1e-6)
+        .transition()
             .duration(1000)
             .style("opacity", 1);
+
     text.style("font-family", function(d) {
         return d.font;
     })
-            .style("fill", function(d) {
-                return fill(d.text.toLowerCase());
-            })
-            .text(function(d) {
-                return d.text;
-            });
+
+        .style("fill", function(d) {
+            // Positive values get red color scale
+            if (d.value >= 0){
+                return pos_color(d.value);
+            // Negative values get blue color scale
+            } else {
+                return neg_color(d.value);  
+            }
+    })
+        .text(function(d) {
+            return d.text;
+        });
 
     vis.transition().attr("transform", "translate(" + [width >> 1, height >> 1] + ")scale(" + scale + ")");
 }
@@ -560,7 +583,7 @@ function update() {
     layout.font('impact').spiral('archimedean');
     fontSize = d3.scale['sqrt']().range([10, 100]);
     if (nodes.length){
-        fontSize.domain([+nodes[nodes.length - 1].value || 1, +nodes[0].value]);
+        fontSize.domain([0,1]);
     }
     layout.stop().words(nodes).start();
 }
@@ -615,7 +638,7 @@ $("#github").click(function(){
 // On region selection, navigation to new page
 $('#region_list').on("change", function(e) { 
    var selection = $("#region_list option:selected").attr("value")
-   alert("Please download the repo or Docker Image for full functionality.");
+   alert('Please download application or Docker Image for full functionality.')
 });
 </script>
 </body>
