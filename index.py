@@ -25,7 +25,7 @@ class CogatServer(Flask):
             self.maxRadius = 12
           
             # Image data
-            self.X = pickle.load(open("data/images_df.pkl","rb"))
+            self.X = pickle.load(open("data/images_df.pkl","rb"),encoding='latin1')
             # value will be radius, we don't want negative values
             self.radius = self.X + self.X.min().abs()
 
