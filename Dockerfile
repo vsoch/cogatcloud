@@ -14,6 +14,8 @@ RUN pip install numpy
 RUN pip install gunicorn
 RUN pip install pandas
 RUN pip install wordcloud
+RUN pip install Pillow
+RUN pip install matplotlib
 
 ADD . /code
 WORKDIR /code
