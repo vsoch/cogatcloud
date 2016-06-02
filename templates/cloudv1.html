@@ -109,9 +109,7 @@ body {
 <body>
 <h3 style="padding-left:15px">Cognitive Concept Association with Region {{region_name}}</h3>
 
-<div id="voxel" class="visual">
-    <img src="data:image/png;base64,{{ png_data | safe }}" style="padding-left:200px"/>
-</div>
+<div id="voxel" class="visual"></div>
 
 <!-- Menu in top right -->
 <div class="mdl-card__menu">
@@ -119,6 +117,7 @@ body {
          <!-- Image options -->
          <div class="mdl-card__actions">
 
+             <button class="mdl-button mdl-button--icon mdl-button--colored mdl-js-ripple-effect" id="save_as_svg" value="" onclick="save_svg()"><i class="material-icons">save</i></button>
              <button id="about" class="mdl-button mdl-button--icon mdl-button--colored mdl-js-button mdl-js-ripple-effect" id="save_as_svg" value=""><i class="material-icons">info</i></button>
              <button class="mdl-button mdl-button--icon mdl-button--colored mdl-js-ripple-effect" id="github" value=""><i class="material-icons">code</i></button>
          </div>
@@ -246,6 +245,111 @@ $.each(regparams, function( concept, value ) {
 // Sort nodes by value
 nodes = nodes.sort(function(a,b) { return +a.value - +b.value; })
 
+var fill = d3.scale.category20b();
+
+// Color scales
+var neg_color = d3.scale.linear()
+    .domain([-1, 0])
+    .range(["blue", "#CCC"]);
+
+var pos_color = d3.scale.linear()
+    .domain([0, 1])
+    .range(["#CCC", "orangered"]);
+
+var max,
+        fontSize;
+
+var layout = d3.layout.cloud()
+    .timeInterval(Infinity)
+    .size([width, height])
+    .fontSize(function(d) {
+        // Size should be absolute value
+        return fontSize(+Math.abs(d.value));
+    })
+    .text(function(d) {
+        return d.key;
+    })
+    .on("end", draw);
+
+var svg = d3.select("#voxel").append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+var vis = svg.append("g").attr("transform", "translate(" + [width >> 1, height >> 1] + ")");
+
+update();
+
+window.onresize = function(event) {
+    update();
+};
+
+function draw(data, bounds) {
+
+    svg.attr("width", width).attr("height", height);
+
+    scale = bounds ? Math.min(
+        width / Math.abs(bounds[1].x - width / 2),
+        width / Math.abs(bounds[0].x - width / 2),
+        height / Math.abs(bounds[1].y - height / 2),
+        height / Math.abs(bounds[0].y - height / 2)) / 2 : 1;
+
+    var text = vis.selectAll("text")
+        .data(data, function(d) {
+            return d.text.toLowerCase();
+        });
+
+    text.transition()
+        .duration(1000)
+        .attr("transform", function(d) {
+            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .style("font-size", function(d) {
+            return d.size + "px";
+        });
+
+    text.enter().append("text")
+        .attr("text-anchor", "middle")
+        .attr("transform", function(d) {
+            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .style("font-size", function(d) {
+            return d.size + "px";
+        })
+        .style("opacity", 1e-6)
+        .transition()
+            .duration(1000)
+            .style("opacity", 1);
+
+    text.style("font-family", function(d) {
+        return d.font;
+    })
+
+        .style("fill", function(d) {
+            // Positive values get red color scale
+            if (d.value >= 0){
+                return pos_color(d.value);
+            // Negative values get blue color scale
+            } else {
+                return neg_color(d.value);  
+            }
+    })
+        .text(function(d) {
+            return d.text;
+        });
+
+    vis.transition().attr("transform", "translate(" + [width >> 1, height >> 1] + ")scale(" + scale + ")");
+}
+
+function update() {
+    layout.font('impact').spiral('archimedean');
+    fontSize = d3.scale['sqrt']().range([10, 100]);
+    if (nodes.length){
+        fontSize.domain([0,1]);
+    }
+    layout.stop().words(nodes).start();
+}
+
+
 // Function to highlight contrasts on click
 $(".concept_button").mouseover(function() {
     var concept = $(this).attr("name");
@@ -258,6 +362,16 @@ $(".concept_button").mouseout(function() {
 });
 
 //  BUTTONS !! //
+
+//Vanessa's Hacky save svg function!
+function save_svg(evt) {
+    var svg = document.getElementsByTagName("svg");
+    var serializer = new XMLSerializer();
+    var svg_blob = new Blob([serializer.serializeToString(svg[0])],
+                            {'type': "image/svg+xml"});
+    var url = URL.createObjectURL(svg_blob);
+    var svg_win = window.open(url, "svg_win");
+}
 
 // Select2 menu for the regions
 $(document).ready(function(){

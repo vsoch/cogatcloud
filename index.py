@@ -1,4 +1,7 @@
 from flask import Flask, render_template
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+import cStringIO
 import random
 import numpy
 import pandas
@@ -19,8 +22,8 @@ class CogatServer(Flask):
             self.region_lookup = pandas.read_pickle("data/aal_4mm_region_lookup.pkl")
 
             # D3 specific variables
-            self.width = 1500
-            self.height = 600
+            self.width = 1200
+            self.height = 1000
             self.padding = 12
             self.maxRadius = 12
           
@@ -88,6 +91,16 @@ def voxel(v,name):
     regparams["key"] = [lookup[x] for x in regparams.index]
     regparams["color"] = [colors[x] for x in regparams.index]
     regparams.columns = ['value', 'key', 'color']
+
+    # Generate a word cloud image, take regression params into account
+    scaled = (regparams['value'].abs()*1000).copy()
+    text = []
+    for k,v in scaled.iteritems():
+        multiply_by = int(v)
+        string = [regparams.loc[k]['key'].replace(" ","_")] * multiply_by
+        text = text + string
+
+    text =  " ".join(text)
     regparams = regparams.to_json(orient="records")
 
     # Min and max values for the color scale
@@ -96,6 +109,31 @@ def voxel(v,name):
 
     # We will let the user select a voxel location based on region
     regions = app.regions.to_dict(orient="records")
+    
+    wordcloud = WordCloud(max_font_size=100, width=app.width, height=app.height,
+                          relative_scaling=1.0, background_color="white").generate(text)
+
+    # Remove "_" in words
+    words = []
+    for tup in wordcloud.words_:
+        words.append((tup[0].replace("_"," "),tup[1]))
+    wordcloud.words_ = words
+
+    layout = []
+    for tup in wordcloud.layout_:
+        newtup = ((tup[0][0].replace("_"," "),tup[0][1]),
+                  tup[1],
+                  tup[2],
+                  tup[3],
+                  tup[4])
+        layout.append(newtup)
+    wordcloud.layout_ = layout
+
+    plt.imshow(wordcloud)
+    plt.axis("off")
+    sio = cStringIO.StringIO()
+    plt.savefig(sio, format="png")
+    png_data = sio.getvalue().encode("base64").strip()
 
     return render_template("cloud.html",regparams=regparams,
                                         min=app.df.loc[voxel_idx].min(),
@@ -109,6 +147,7 @@ def voxel(v,name):
                                         maxRadius=app.maxRadius,
                                         lookup=lookup,
                                         colors=colors,
+                                        png_data=png_data,
                                         voxel=voxel_idx,
                                         regions=regions,
                                         region_name=name)

@@ -13,6 +13,7 @@ RUN pip install flask
 RUN pip install numpy
 RUN pip install gunicorn
 RUN pip install pandas
+RUN pip install wordcloud
 
 ADD . /code
 WORKDIR /code
